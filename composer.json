@@ -1,0 +1,23 @@
+{
+    "name": "crodas/api-server",
+    "description": "API Server with PHP and MongoDB",
+    "type": "library",
+    "require": {
+        "crodas/activemongo2": "^0.4",
+        "crodas/service-provider": "^0.1",
+        "crodas/function-discovery": "^0.2"
+    },
+    "autoload": {
+        "psr-0": {
+            "": "src/"
+        }
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Cesar Rodas",
+            "email": "cesar@rodas.me"
+        }
+    ],
+    "minimum-stability": "stable"
+}
