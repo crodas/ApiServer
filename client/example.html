@@ -1,0 +1,21 @@
+<script src="dist.min/api.client.js"></script>
+<html>
+<head>
+    <script src="dist.min/api.client.js"></script>
+</head>
+<body>
+Server.setUrl("http://localhost:9999");
+Server.exec("foobar", [1], function() {
+    // req 1
+});
+Server.exec("foobar", [1], function() {
+    // req 1
+});
+Server.exec("foobar", [1], function() {
+    // req 1
+});
+Server.exec("foobar", [1], function() {
+    // req 1
+});
+</body>
+</html>

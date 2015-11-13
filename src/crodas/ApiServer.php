@@ -11,6 +11,8 @@ use Exception;
 
 class ApiServer
 {
+    const WRONG_REQ_METHOD = -1;
+
     public function __construct(MongoClient $conn, $dbname, $applications, $models)
     {
         $loader = new FunctionDiscovery($applications, '@api');
@@ -30,15 +32,23 @@ class ApiServer
 
     public function main()
     {
-        $json = json_decode(file_get_contents('php://stdin'), true);
+        header("Access-Control-Allow-Origin: *");
+        header("Content-Type: application/json");
+
+        if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+            echo self::WRONG_REQ_METHOD;
+            exit;
+        }
+
+        $json = json_decode(file_get_contents('php://input'), true);
         $responses = array();
         foreach ($json as $object) {
             try {
-                if (empty($this->apps[$object['method']])) {
-                    throw new RuntimeException($object['method'] . "doesn't exists");
+                if (empty($this->apps[$object[0]])) {
+                    throw new RuntimeException($object[0] . "doesn't exists");
                 }
-                $function = $this->apps[$object['method']];
-                $responses[] = $function($object['args'], $this);
+                $function = $this->apps[$object[0]];
+                $responses[] = $function($object[1], $this);
             } catch (Exception $e) {
                 $responses[] = array('error' => true, 'text' => $e->GetMessage());
             }

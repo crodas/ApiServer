@@ -1,0 +1,28 @@
+{
+  "name": "api-client",
+  "version": "0.1.1",
+  "description": "API Client for https://github.com/crodas/ApiServer",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Cesar Rodas <cesar@rodas.me>",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/crodas/APIServer.git"
+  },
+  "keywords": [
+    "api-client"
+  ],
+  "bugs": {
+    "url": "https://github.com/crodas/APIServer/issues"
+  },
+  "homepage": "https://github.com/crodas/APIServer#readme",
+  "dependencies": {
+    "gulp": "^3.9.0",
+    "gulp-bower": "0.0.10",
+    "gulp-concat": "^2.6.0",
+    "gulp-uglify": "^1.5.1"
+  }
+}
