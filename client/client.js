@@ -12,10 +12,18 @@ var Server = (function API_Client() {
         queue = [];
 
         var xhr = new XMLHttpRequest();
+        xhr.onerror = function() {
+
+        };
         xhr.onload = function() {
             var response = JSON.parse(this.response || this.responseText);
+            if (typeof response === "number") {
+                // general error
+                // TODO: retry or give up
+                return;
+            }
             for (var i = 0; i < response.length; ++i) {
-                if (typeof response[i] === "number") {
+                if (typeof response[i] === "object" && response[i].error) {
                     currentQueue[i][3](response[i]);
                 } else {
                     currentQueue[i][2](response[i]);
