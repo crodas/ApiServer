@@ -24,6 +24,11 @@ class ApiServer
         });
     }
 
+    public function getDb()
+    {
+        return $this->db;
+    }
+
     public function setSession($session)
     {
         $this->session = $session;
