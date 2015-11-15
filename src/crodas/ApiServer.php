@@ -12,8 +12,9 @@ use Exception;
 class ApiServer
 {
     const WRONG_REQ_METHOD = -1;
+    const INVALID_SESSION  = -2;
 
-    public function __construct(MongoClient $conn, $dbname, $applications, $models)
+    public function __construct(MongoClient $conn, $dbname, $models, $applications)
     {
         $loader = new FunctionDiscovery($applications, '@api');
         $conf   = new ActiveMongo2\Configuration;
@@ -39,6 +40,8 @@ class ApiServer
     {
         header("Access-Control-Allow-Origin: *");
         header("Content-Type: application/json");
+        header('Access-Control-Allow-Credentials: false');
+        header('Access-Control-Allow-Methods: POST');
 
         if ($_SERVER["REQUEST_METHOD"] !== "POST") {
             echo self::WRONG_REQ_METHOD;
