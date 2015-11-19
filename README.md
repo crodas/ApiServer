@@ -19,12 +19,16 @@ The bootstrap code (index.php) should look like this:
 ```php
 require __DIR__ . '/vendor/autoload.php';
 
-$mongo = new MongoClient;
+$mongo = new ActiveMongo2\Client(
+    new MongoClient,
+    'databaseName',
+    __DIR__ . '/src/models', // my models
+);
+
+
 
 $api = new crodas\ApiServer(
-    $mongo, // MongoClient connection
-    'databasename', // my database
-    __DIR__ . '/src/models', // my models
+    $mongo, // Your DB object
     __DIR__ . '/src/services' // my apis
 );
 

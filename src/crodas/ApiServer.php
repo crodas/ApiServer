@@ -14,12 +14,12 @@ class ApiServer
     const WRONG_REQ_METHOD = -1;
     const INVALID_SESSION  = -2;
 
-    public function __construct(MongoClient $conn, $dbname, $models, $applications)
+    protected $db;
+    protected $apps;
+
+    public function __construct($db, $applications)
     {
-        $loader = new FunctionDiscovery($applications, '@api');
-        $conf   = new ActiveMongo2\Configuration;
-        $conf->addModelPath($models);
-        $this->db   = new ActiveMongo2\Connection($conf, $conn, $conn->selectDB($dbname));
+        $this->db   = $db;
         $this->apps = $loader->filter(function($function, $annotation) {
             $function->setName($annotation->getArg());
         });

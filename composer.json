@@ -3,7 +3,7 @@
     "description": "API Server with PHP and MongoDB",
     "type": "library",
     "require": {
-        "crodas/activemongo2": "^0.4",
+        "crodas/activemongo2": "^0.5",
         "crodas/service-provider": "^0.1",
         "crodas/function-discovery": "^0.2"
     },
