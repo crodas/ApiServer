@@ -19,6 +19,7 @@ class ApiServer
 
     public function __construct($db, $applications)
     {
+        $loader = new FunctionDiscovery($applications, '@api');
         $this->db   = $db;
         $this->apps = $loader->filter(function($function, $annotation) {
             $function->setName($annotation->getArg());
