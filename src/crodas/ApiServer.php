@@ -16,6 +16,9 @@ class ApiServer
 
     protected $db;
     protected $apps;
+    protected $sessionId;
+    protected $sessionData;
+    protected $sessionParser;
 
     public function __construct($db, $applications)
     {
@@ -26,14 +29,30 @@ class ApiServer
         });
     }
 
+    public function setSessionParser(Callable $function)
+    {
+        $this->sessionParser = $function;
+        return $this;
+    }
+
     public function getDb()
     {
         return $this->db;
     }
 
+    public function getSession()
+    {
+        if (empty($this->sessionData)) {
+            throw new RuntimeException("There is no session");
+        }
+        return $this->sessionData;
+    }
+
     public function setSession($session)
     {
-        $this->session = $session;
+        $sessionParser   = $this->sessionParser;
+        $this->sessionId = $session;
+        $this->sessionData = $sessionParser($session);
         return $this;
     }
 
@@ -49,6 +68,14 @@ class ApiServer
             exit;
         }
 
+        if (!empty($_SERVER["HTTP_X_SESSION_ID"])) {
+            $this->setSession($_SERVER['HTTP_X_SESSION_ID']);
+            if (empty($this->sessionData)) {
+                echo self::INVALID_SESSION;
+                exit;
+            }
+        }
+
         $json = json_decode(file_get_contents('php://input'), true);
         $responses = array();
         foreach ($json as $object) {
@@ -57,12 +84,13 @@ class ApiServer
                     throw new RuntimeException($object[0] . "doesn't exists");
                 }
                 $function = $this->apps[$object[0]];
-                $responses[] = $function($object[1], $this);
+                $responses[] = $function($object[1], $this, $this->sessionData);
             } catch (Exception $e) {
                 $responses[] = array('error' => true, 'text' => $e->GetMessage());
             }
         }
 
+        header("X-Session-Id: {$this->sessionId}");
         echo json_encode($responses);
     }
 }
