@@ -48,6 +48,13 @@ class ApiServer
         return $this->sessionData;
     }
 
+    public function destroySession()
+    {
+        $this->sessionId = null;
+        $this->sessionData = null;
+        return $this;
+    }
+
     public function setSession($session)
     {
         $sessionParser   = $this->sessionParser;
