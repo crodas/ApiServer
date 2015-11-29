@@ -60,7 +60,13 @@ class ApiServer
         $sessionParser   = $this->sessionParser;
         $this->sessionId = $session;
         $this->sessionData = $sessionParser($session);
+        header("X-Session-Id: {$this->sessionId}");
         return $this;
+    }
+
+    public function destroySession()
+    {
+        header("X-Destroy-Session-Id: 1");
     }
 
     public function main()
@@ -76,7 +82,7 @@ class ApiServer
         }
 
         if (!empty($_SERVER["HTTP_X_SESSION_ID"])) {
-            $this->setSession($_SERVER['HTTP_X_SESSION_ID']);
+            $this->setSession($_SERVER['HTTP_X_SESSION_ID'], false);
             if (empty($this->sessionData)) {
                 echo self::INVALID_SESSION;
                 exit;
@@ -88,16 +94,18 @@ class ApiServer
         foreach ($json as $object) {
             try {
                 if (empty($this->apps[$object[0]])) {
-                    throw new RuntimeException($object[0] . "doesn't exists");
+                    throw new RuntimeException($object[0] . " doesn't exists");
                 }
                 $function = $this->apps[$object[0]];
+                if ($function->hasAnnotation('auth') && !$this->sessionData) {
+                    throw new RuntimeException("{$object[0]} requires a valid session");
+                }
                 $responses[] = $function($object[1], $this, $this->sessionData);
             } catch (Exception $e) {
                 $responses[] = array('error' => true, 'text' => $e->GetMessage());
             }
         }
 
-        header("X-Session-Id: {$this->sessionId}");
         echo json_encode($responses);
     }
 }
