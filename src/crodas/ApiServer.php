@@ -48,12 +48,14 @@ class ApiServer
         return $this->sessionData;
     }
 
-    public function setSession($session)
+    public function setSession($session, $set = true)
     {
-        $sessionParser   = $this->sessionParser;
-        $this->sessionId = $session;
+        $sessionParser     = $this->sessionParser;
+        $this->sessionId   = $session;
         $this->sessionData = $sessionParser($session);
-        header("X-Session-Id: {$this->sessionId}");
+        if ($set) {
+            header("X-Set-Session-Id: {$this->sessionId}");
+        }
         return $this;
     }
 
