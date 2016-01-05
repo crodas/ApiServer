@@ -4,8 +4,8 @@
     "type": "library",
     "require": {
         "crodas/activemongo2": "^0.6",
-        "crodas/service-provider": "^0.1",
-        "crodas/function-discovery": "^0.3"
+        "crodas/service-provider": ">=0.1",
+        "crodas/function-discovery": ">=0.4"
     },
     "autoload": {
         "psr-0": {
