@@ -67,6 +67,34 @@ class ApiServer
         return $this;
     }
 
+    public function processRequest(Array $request)
+    {
+        if (!empty($_SERVER["HTTP_X_SESSION_ID"])) {
+            $this->setSession($_SERVER['HTTP_X_SESSION_ID'], false);
+            if (empty($this->sessionData)) {
+                return self::INVALID_SESSION;
+            }
+        }
+
+        $responses = array();
+        foreach ($request as $object) {
+            try {
+                if (empty($this->apps[$object[0]])) {
+                    throw new RuntimeException($object[0] . " is not a valid handler");
+                }
+                $function = $this->apps[$object[0]];
+                if ($function->hasAnnotation('auth') && !$this->sessionData) {
+                    throw new RuntimeException("{$object[0]} requires a valid session");
+                }
+                $responses[] = $function($object[1], $this, $this->sessionData);
+            } catch (Exception $e) {
+                $responses[] = array('error' => true, 'text' => $e->getMessage());
+            }
+        }
+
+        return $responses;
+    }
+
     public function main()
     {
         header("Access-Control-Allow-Origin: *");
@@ -79,30 +107,7 @@ class ApiServer
             exit;
         }
 
-        if (!empty($_SERVER["HTTP_X_SESSION_ID"])) {
-            $this->setSession($_SERVER['HTTP_X_SESSION_ID'], false);
-            if (empty($this->sessionData)) {
-                echo self::INVALID_SESSION;
-                exit;
-            }
-        }
-
-        $json = json_decode(file_get_contents('php://input'), true);
-        $responses = array();
-        foreach ($json as $object) {
-            try {
-                if (empty($this->apps[$object[0]])) {
-                    throw new RuntimeException($object[0] . " doesn't exists");
-                }
-                $function = $this->apps[$object[0]];
-                if ($function->hasAnnotation('auth') && !$this->sessionData) {
-                    throw new RuntimeException("{$object[0]} requires a valid session");
-                }
-                $responses[] = $function($object[1], $this, $this->sessionData);
-            } catch (Exception $e) {
-                $responses[] = array('error' => true, 'text' => $e->GetMessage());
-            }
-        }
+        $responses = $this->processRequest(json_decode(file_get_contents('php://input'), true));
 
         echo json_encode($responses);
     }
