@@ -20,13 +20,16 @@ class ApiServer
     protected $sessionData;
     protected $sessionParser;
 
-    public function __construct($db, $applications)
+    public function __construct($db, $dir)
     {
-        $loader = new FunctionDiscovery($applications, '@api');
-        $this->db   = $db;
-        $this->apps = $loader->filter(function($function, $annotation) {
-            $function->setName($annotation->getArg());
-        });
+        $loader   = new FunctionDiscovery($dir);
+        $this->db = $db;
+        $this->apps   = $loader->getFunctions('@api');
+        $this->events = array(
+            'preRoute' => $loader->getFunctions('preRoute'),
+            'postRoute' => $loader->getFunctions('postRoute'),
+            'preResponse' => $loader->getFunctions('preResponse'),
+        );
     }
 
     public function setSessionParser(Callable $function)
@@ -67,6 +70,18 @@ class ApiServer
         return $this;
     }
 
+    protected function runEvent($name, $function, &$argument)
+    {
+        foreach ($this->events[$name] as $name => $annArgs) {
+            if (!$function || (is_numeric($name) || $function->hasAnnotation($name))) {
+                $response = $annArgs($argument, $this, $this->sessionData, $function ? $function->getAnnotation($name) : null);
+                if ($response !== null) {
+                    $argument = $response;
+                }
+            }
+        }
+    }
+
     public function processRequest(Array $request)
     {
         if (!empty($_SERVER["HTTP_X_SESSION_ID"])) {
@@ -79,18 +94,28 @@ class ApiServer
         $responses = array();
         foreach ($request as $object) {
             try {
-                if (empty($this->apps[$object[0]])) {
+                $this->apiCall = $object[0];
+                if (empty($this->apps[$this->apiCall])) {
                     throw new RuntimeException($object[0] . " is not a valid handler");
                 }
-                $function = $this->apps[$object[0]];
+                $function = $this->apps[$this->apiCall];
+                $argument = $object[1];
+
                 if ($function->hasAnnotation('auth') && !$this->sessionData) {
                     throw new RuntimeException("{$object[0]} requires a valid session");
                 }
-                $responses[] = $function($object[1], $this, $this->sessionData);
+
+                $this->runEvent('preRoute', $function, $argument);
+                $response = $function($argument, $this, $this->sessionData);
+                $this->runEvent('postRoute', $function, $argument);
+
+                $responses[] = $response;
             } catch (Exception $e) {
                 $responses[] = array('error' => true, 'text' => $e->getMessage());
             }
         }
+
+        $this->runEvent('preResponse', NULL, $responses);
 
         return $responses;
     }

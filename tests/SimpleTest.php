@@ -18,6 +18,16 @@ class SimpleTest extends \phpunit_framework_testcase
     public function testRouting(Array $request, Array $response)
     {
         $server = new crodas\ApiServer(null, __DIR__ . '/apps');
-        $this->assertEquals($server->processRequest($request), $response);
+        $this->assertEquals($response, $server->processRequest($request));
+    }
+
+    /**
+     *  @dataProvider requests
+     */
+    public function testPreresponse(Array $request, Array $response)
+    {
+        $server = new crodas\ApiServer(null, __DIR__ . '/apps');
+        $GLOBALS['encrypt'] = true;
+        $this->assertEquals(do_encrypt($response), $server->processRequest($request));
     }
 }
