@@ -7,41 +7,29 @@ use RuntimeException;
 use Exception;
 use Pimple;
 
-class ApiServer extends Pimple\Container
+class ApiServer extends Pimple
 {
     const WRONG_REQ_METHOD = -1;
     const INVALID_SESSION  = -2;
 
     protected $apps;
 
-    public function __construct($dir)
+    public function __construct($dirs)
     {
-        $loader   = new FunctionDiscovery($dir);
-        $this->apps   = $loader->getFunctions('@api');
+        $dirs   = (Array)$dirs;
+        $dirs[] = __DIR__;
+        $loader = new FunctionDiscovery($dirs);
+        $this->apps   = $loader->getFunctions('api');
         $this->events = array(
-            'preRoute' => $loader->getFunctions('preRoute'),
-            'postRoute' => $loader->getFunctions('postRoute'),
-            'preResponse' => $loader->getFunctions('preResponse'),
+            'initRequest'   => $loader->getFunctions('initRequest'),
+            'preRoute'      => $loader->getFunctions('preRoute'),
+            'postRoute'     => $loader->getFunctions('postRoute'),
+            'preResponse'   => $loader->getFunctions('preResponse'),
         );
-    }
-
-    public function setSession($session, $set = true)
-    {
-        $sessionParser     = $this->sessionParser;
-        $this->sessionId   = $session;
-        $this->sessionData = $sessionParser($session);
-        if ($set) {
-            header("X-Set-Session-Id: {$this->sessionId}");
-        }
-        return $this;
-    }
-
-    public function destroySession()
-    {
-        header("X-Destroy-Session-Id: 1");
-        $this->sessionId = null;
-        $this->sessionData = null;
-        return $this;
+        $this['session_storage'] = __NAMESPACE__ . '\ApiServer\SessionNative';
+        $this['session'] = $this->share(function($service) {
+            return new $service['session_storage'](!empty($_GET['sessionId']) ? $_GET['sessionId'] :  null);
+        });
     }
 
     protected function runEvent($name, $function, &$argument)
@@ -61,6 +49,8 @@ class ApiServer extends Pimple\Container
         if (!empty($_SERVER["HTTP_X_SESSION_ID"])) {
             return self::INVALID_SESSION;
         }
+
+        $this->runEvent('initRequest', NULL, $request);
 
         $responses = array();
         foreach ($request as $object) {
@@ -93,6 +83,8 @@ class ApiServer extends Pimple\Container
         header("Content-Type: application/json");
         header('Access-Control-Allow-Credentials: false');
         header('Access-Control-Allow-Methods: POST');
+        header("X-Session-Id: {$this['session']->getSessionId()}");
+
         $keys = array();
         foreach (headers_list() as $header) {
             list($key, ) = explode(":", $header);
