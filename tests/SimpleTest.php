@@ -2,19 +2,19 @@
 
 class SessionStorage implements crodas\ApiServer\SessionStorage
 {
+    static $xdata = array();
     public function __construct($id)
     {
         $this->id = $id ?: uniqid(true);
         $this->data = array();
-        $this->file = __DIR__ . '/tmp/' . $this->id . '.txt';
-        if (is_file($this->file)) {
-            $this->data = unserialize(file_get_contents($this->file));
+        if (!empty(self::$xdata[$this->id])) {
+            $this->data = self::$xdata[$this->id];
         }
     }
 
     public function __destruct()
     {
-        file_put_contents($this->file, serialize($this->data));
+        self::$xdata[$this->id] = $this->data;
     }
     
     public function get($name)
@@ -33,7 +33,7 @@ class SessionStorage implements crodas\ApiServer\SessionStorage
 
     public function getSessionId()
     {
-        file_put_contents($this->file, serialize($this->data));
+        self::$xdata[$this->id] = $this->data;
         return $this->id;
     }
 }
