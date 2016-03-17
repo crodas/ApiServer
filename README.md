@@ -1,6 +1,6 @@
 # ApiServer
 
-Deadly simple API-Server. 
+Deadly simple API µServer. 
 
 It was designed for Javascript clients:
 
@@ -8,11 +8,10 @@ It was designed for Javascript clients:
 2. API calls are buffered for 50ms waiting for other requests to join
     1. The less we talk to the server the better.
 3. The server is implemented from scratch keeping easy of use in mind:
-    1. MongoDB models with [ActiveMongo2](https://github.com/crodas/ActiveMongo2)
-    2. API handlers are PHP functions or methods which are discovered with annotations
-    3. Everything is compiled for speed.
+    1. API handlers are PHP functions or methods which are discovered with annotations
+    2. Everything is compiled for speed.
 
-## How to setup
+## How to use it
 
 The bootstrap code (index.php) should look like this:
 
@@ -25,8 +24,6 @@ $api = new crodas\ApiServer(
 
 $api->main();
 ```
-
-[ActiveMongo2](https://github.com/crodas/ActiveMongo2) is used for models (to keep the code deadly simple), and services are bare functions or methods with the `@API` annotation.
 
 ```php
 /** @API array_sum */

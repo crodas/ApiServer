@@ -11,6 +11,7 @@ class ApiServer extends Pimple
 {
     const WRONG_REQ_METHOD = -1;
     const INVALID_SESSION  = -2;
+    const INTERNAL_ERROR = -3;
 
     protected $apps;
 
@@ -46,10 +47,6 @@ class ApiServer extends Pimple
 
     public function processRequest(Array $request)
     {
-        if (!empty($_SERVER["HTTP_X_SESSION_ID"])) {
-            return self::INVALID_SESSION;
-        }
-
         $this->runEvent('initRequest', NULL, $request);
 
         $responses = array();
