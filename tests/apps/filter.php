@@ -9,39 +9,51 @@ function filter_xx(Array $args)
 }
 
 function is_prime($x) {
-	$middle = ceil($x/2);
-	for ($i = 2; $i <= $middle; ++$i) {
-		if ($x % $i === 0) {
-			return false;
-		}
-	}
+    $middle = ceil($x/2);
+    for ($i = 2; $i <= $middle; ++$i) {
+        if ($x % $i === 0) {
+            return false;
+        }
+    }
 
-	return true;
+    return true;
 }
 
 /**
- *	@initRequest
+ *    @initRequest is_prime3
+ */
+function filter_prime_x(Array $requests, $server)
+{
+    foreach ($requests as &$request) {
+        $request['result'] = is_prime($request['q']);
+    }
+
+    return $request;
+}
+
+/**
+ *    @initRequest
  */
 function filter_prime_1(Array $requests, $server)
 {
-	$is_prime = array();
-	foreach ($requests as $request) {
-		if ($request[0] === 'is_prime') {
-			$is_prime[$request[1]['q']] = is_prime($request[1]['q']);
-		}
-	}
-	$server['is_prime'] = $is_prime;
+    $is_prime = array();
+    foreach ($requests as $request) {
+        if ($request[0] === 'is_prime') {
+            $is_prime[$request[1]['q']] = is_prime($request[1]['q']);
+        }
+    }
+    $server['is_prime'] = $is_prime;
 }
 
 /**
- *	@initRequest
+ *    @initRequest
  */
 function filter_prime_2(Array $requests, $server)
 {
-	foreach ($requests as &$request) {
-		if ($request[0] === 'is_prime_2') {
-			$request[1]['result'] = is_prime($request[1]['q']);
-		}
-	}
-	return $requests;
+    foreach ($requests as &$request) {
+        if ($request[0] === 'is_prime_2') {
+            $request[1]['result'] = is_prime($request[1]['q']);
+        }
+    }
+    return $requests;
 }

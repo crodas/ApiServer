@@ -33,9 +33,22 @@ class ApiServer extends Pimple
         });
     }
 
-    protected function runEvent($name, $function, &$argument)
+    protected function runEvent($event, $function, &$argument)
     {
-        foreach ($this->events[$name] as $name => $annArgs) {
+        foreach ($this->events[$event] as $name => $annArgs) {
+            if ($event === 'initRequest' && is_string($name) ) {
+                $args = array();
+                foreach ($argument as $id => $arg) {
+                    if ($arg[0] === $name) {
+                        $args[] = &$argument[$id][1];
+                    }
+                }
+                if (empty($args)) {
+                    continue;
+                }
+                $annArgs($args, $this, $function ? $function->getAnnotation($name) : null);
+                continue;
+            }
             if (!$function || (is_numeric($name) || $function->hasAnnotation($name))) {
                 $response = $annArgs($argument, $this, $function ? $function->getAnnotation($name) : null);
                 if ($response !== null) {
@@ -92,14 +105,14 @@ class ApiServer extends Pimple
 
     public function main()
     {
-
         if ($_SERVER["REQUEST_METHOD"] !== "POST") {
             $this->sendHeaders();
             echo self::WRONG_REQ_METHOD;
             exit;
         }
 
-        $responses = $this->processRequest(json_decode(file_get_contents('php://input'), true));
+        $request   = json_decode(file_get_contents('php://input'), true);
+        $responses = $this->processRequest($request);
 
         $this->sendHeaders();
         echo json_encode($responses);
