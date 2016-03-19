@@ -68,7 +68,8 @@ class SimpleTest extends \phpunit_framework_testcase
         $server = new crodas\ApiServer(__DIR__ . '/apps');
         $server['session_storage'] = 'SessionStorage';
         $GLOBALS['encrypt'] = true;
-        $this->assertEquals(do_encrypt($response), $server->processRequest($request));
+        do_encrypt($response);
+        $this->assertEquals($response, $server->processRequest($request));
     }
 
     public function testSession()

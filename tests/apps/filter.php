@@ -27,8 +27,6 @@ function filter_prime_x(Array $requests, $server)
     foreach ($requests as &$request) {
         $request['result'] = is_prime($request['q']);
     }
-
-    return $request;
 }
 
 /**
@@ -55,5 +53,4 @@ function filter_prime_2(Array $requests, $server)
             $request[1]['result'] = is_prime($request[1]['q']);
         }
     }
-    return $requests;
 }

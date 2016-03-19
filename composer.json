@@ -3,7 +3,7 @@
     "description": "API Server with PHP and MongoDB",
     "type": "library",
     "require": {
-        "crodas/function-discovery": ">=0.4",
+        "crodas/function-discovery": ">=0.6.1",
         "pimple/pimple": "~1.0"
     },
     "autoload": {

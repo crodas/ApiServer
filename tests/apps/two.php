@@ -3,10 +3,10 @@
 /**
  *  @preResponse
  */
-function do_encrypt($response)
+function do_encrypt(&$response)
 {
     if (!empty($GLOBALS['encrypt'])) {
-        return base64_encode(json_encode($response));
+        $response = base64_encode(json_encode($response));
     }
 }
 
@@ -21,8 +21,7 @@ function do_it()
 /**
  *  @preRoute
  */
-function all_request(Array $args)
+function all_request(Array & $args)
 {
     $args['added'] = 1;
-    return $args;
 }

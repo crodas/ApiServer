@@ -35,6 +35,11 @@ class ApiServer extends Pimple
 
     protected function runEvent($event, $function, &$argument)
     {
+        $ref = array();
+        foreach ($argument as $id => $arg) {
+            $ref[$id] = &$argument[$id];
+        }
+
         foreach ($this->events[$event] as $name => $annArgs) {
             if ($event === 'initRequest' && is_string($name) ) {
                 $args = array();
@@ -50,10 +55,7 @@ class ApiServer extends Pimple
                 continue;
             }
             if (!$function || (is_numeric($name) || $function->hasAnnotation($name))) {
-                $response = $annArgs($argument, $this, $function ? $function->getAnnotation($name) : null);
-                if ($response !== null) {
-                    $argument = $response;
-                }
+                $annArgs->call(array(&$argument, $this, $function ? $function->getAnnotation($name) : null));
             }
         }
     }
