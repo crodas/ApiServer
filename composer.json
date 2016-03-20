@@ -1,11 +1,11 @@
 {
     "name": "crodas/api-server",
     "description": "API Server with PHP and MongoDB",
+    "version": "v0.1.1",
     "type": "library",
     "require": {
-        "crodas/activemongo2": "^0.7",
-        "crodas/service-provider": ">=0.1",
-        "crodas/function-discovery": ">=0.4"
+        "crodas/function-discovery": ">=0.6.1",
+        "pimple/pimple": "~1.0"
     },
     "autoload": {
         "psr-0": {

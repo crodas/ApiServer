@@ -3,112 +3,120 @@
 namespace crodas;
 
 use FunctionDiscovery;
-use ServiceProvider\Provider;
-use ActiveMongo2;
-use MongoClient;
 use RuntimeException;
 use Exception;
+use Pimple;
 
-class ApiServer
+class ApiServer extends Pimple
 {
     const WRONG_REQ_METHOD = -1;
     const INVALID_SESSION  = -2;
+    const INTERNAL_ERROR = -3;
 
-    protected $db;
     protected $apps;
-    protected $sessionId;
-    protected $sessionData;
-    protected $sessionParser;
 
-    public function __construct($db, $applications)
+    public function __construct($dirs)
     {
-        $loader = new FunctionDiscovery($applications, '@api');
-        $this->db   = $db;
-        $this->apps = $loader->filter(function($function, $annotation) {
-            $function->setName($annotation->getArg());
+        $dirs   = (Array)$dirs;
+        $dirs[] = __DIR__;
+        $loader = new FunctionDiscovery($dirs);
+        $this->apps   = $loader->getFunctions('api');
+        $this->events = array(
+            'initRequest'   => $loader->getFunctions('initRequest'),
+            'preRoute'      => $loader->getFunctions('preRoute'),
+            'postRoute'     => $loader->getFunctions('postRoute'),
+            'preResponse'   => $loader->getFunctions('preResponse'),
+        );
+        $this['session_storage'] = __NAMESPACE__ . '\ApiServer\SessionNative';
+        $this['session'] = $this->share(function($service) {
+            return new $service['session_storage'](!empty($_GET['sessionId']) ? $_GET['sessionId'] :  null);
         });
     }
 
-    public function setSessionParser(Callable $function)
+    protected function runEvent($event, $function, &$argument)
     {
-        $this->sessionParser = $function;
-        return $this;
-    }
-
-    public function getDb()
-    {
-        return $this->db;
-    }
-
-    public function getSession()
-    {
-        if (empty($this->sessionData)) {
-            throw new RuntimeException("There is no session");
+        $ref = array();
+        foreach ($argument as $id => $arg) {
+            $ref[$id] = &$argument[$id];
         }
-        return $this->sessionData;
-    }
 
-    public function setSession($session, $set = true)
-    {
-        $sessionParser     = $this->sessionParser;
-        $this->sessionId   = $session;
-        $this->sessionData = $sessionParser($session);
-        if ($set) {
-            header("X-Set-Session-Id: {$this->sessionId}");
+        foreach ($this->events[$event] as $name => $annArgs) {
+            if ($event === 'initRequest' && is_string($name) ) {
+                $args = array();
+                foreach ($argument as $id => $arg) {
+                    if ($arg[0] === $name) {
+                        $args[] = &$argument[$id][1];
+                    }
+                }
+                if (empty($args)) {
+                    continue;
+                }
+                $annArgs($args, $this, $function ? $function->getAnnotation($name) : null);
+                continue;
+            }
+            if (!$function || (is_numeric($name) || $function->hasAnnotation($name))) {
+                $annArgs->call(array(&$argument, $this, $function ? $function->getAnnotation($name) : null));
+            }
         }
-        return $this;
-    }
-
-    public function destroySession()
-    {
-        header("X-Destroy-Session-Id: 1");
-        $this->sessionId = null;
-        $this->sessionData = null;
-        return $this;
     }
 
     public function processRequest(Array $request)
     {
-        if (!empty($_SERVER["HTTP_X_SESSION_ID"])) {
-            $this->setSession($_SERVER['HTTP_X_SESSION_ID'], false);
-            if (empty($this->sessionData)) {
-                return self::INVALID_SESSION;
-            }
-        }
+        $this->runEvent('initRequest', NULL, $request);
 
         $responses = array();
         foreach ($request as $object) {
             try {
-                if (empty($this->apps[$object[0]])) {
+                $this->apiCall = $object[0];
+                if (empty($this->apps[$this->apiCall])) {
                     throw new RuntimeException($object[0] . " is not a valid handler");
                 }
-                $function = $this->apps[$object[0]];
-                if ($function->hasAnnotation('auth') && !$this->sessionData) {
-                    throw new RuntimeException("{$object[0]} requires a valid session");
-                }
-                $responses[] = $function($object[1], $this, $this->sessionData);
+                $function = $this->apps[$this->apiCall];
+                $argument = $object[1];
+
+                $this->runEvent('preRoute', $function, $argument);
+                $response = $function($argument, $this);
+                $this->runEvent('postRoute', $function, $argument);
+
+                $responses[] = $response;
             } catch (Exception $e) {
                 $responses[] = array('error' => true, 'text' => $e->getMessage());
             }
         }
 
+        $this->runEvent('preResponse', NULL, $responses);
+
         return $responses;
     }
 
-    public function main()
+    protected function sendHeaders()
     {
         header("Access-Control-Allow-Origin: *");
         header("Content-Type: application/json");
         header('Access-Control-Allow-Credentials: false');
         header('Access-Control-Allow-Methods: POST');
+        header("X-Session-Id: {$this['session']->getSessionId()}");
 
+        $keys = array();
+        foreach (headers_list() as $header) {
+            list($key, ) = explode(":", $header);
+            $keys[] = $key;
+        }
+        header('Access-Control-Allow-Headers: ' . implode(",", $keys));
+    }
+
+    public function main()
+    {
         if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+            $this->sendHeaders();
             echo self::WRONG_REQ_METHOD;
             exit;
         }
 
-        $responses = $this->processRequest(json_decode(file_get_contents('php://input'), true));
+        $request   = json_decode(file_get_contents('php://input'), true);
+        $responses = $this->processRequest($request);
 
+        $this->sendHeaders();
         echo json_encode($responses);
     }
 }
