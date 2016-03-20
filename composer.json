@@ -1,6 +1,7 @@
 {
     "name": "crodas/api-server",
     "description": "API Server with PHP and MongoDB",
+    "version": "v0.1.1",
     "type": "library",
     "require": {
         "crodas/function-discovery": ">=0.6.1",
