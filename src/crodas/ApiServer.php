@@ -29,17 +29,12 @@ class ApiServer extends Pimple
         );
         $this['session_storage'] = __NAMESPACE__ . '\ApiServer\SessionNative';
         $this['session'] = $this->share(function($service) {
-            return new $service['session_storage'](!empty($_GET['sessionId']) ? $_GET['sessionId'] :  null);
+            return new $service['session_storage'](!empty($_SERVER['HTTP_X_SESSION_ID']) ? $_SERVER['HTTP_X_SESSION_ID'] :  null);
         });
     }
 
     protected function runEvent($event, $function, &$argument)
     {
-        $ref = array();
-        foreach ($argument as $id => $arg) {
-            $ref[$id] = &$argument[$id];
-        }
-
         foreach ($this->events[$event] as $name => $annArgs) {
             if ($event === 'initRequest' && is_string($name) ) {
                 $args = array();
@@ -72,11 +67,10 @@ class ApiServer extends Pimple
                     throw new RuntimeException($object[0] . " is not a valid handler");
                 }
                 $function = $this->apps[$this->apiCall];
-                $argument = $object[1];
 
-                $this->runEvent('preRoute', $function, $argument);
-                $response = $function($argument, $this);
-                $this->runEvent('postRoute', $function, $argument);
+                $this->runEvent('preRoute', $function, $object[1]);
+                $response = $function->call(array(&$object[1], $this));
+                $this->runEvent('postRoute', $function, $object[1]);
 
                 $responses[] = $response;
             } catch (Exception $e) {
@@ -95,14 +89,16 @@ class ApiServer extends Pimple
         header("Content-Type: application/json");
         header('Access-Control-Allow-Credentials: false');
         header('Access-Control-Allow-Methods: POST');
-        header("X-Session-Id: {$this['session']->getSessionId()}");
+        if ($this['session'] && $this['session']->getSessionId() !== $_SERVER['HTTP_X_SESSION_ID']) {
+            header("X-Session-Id: {$this['session']->getSessionId()}");
+        }
 
-        $keys = array();
+        $keys = array('X-Session-Id', 'X-Destroy-Session-Id');
         foreach (headers_list() as $header) {
             list($key, ) = explode(":", $header);
             $keys[] = $key;
         }
-        header('Access-Control-Allow-Headers: ' . implode(",", $keys));
+        header('Access-Control-Allow-Headers: ' . implode(",", array_unique($keys)));
     }
 
     public function main()
