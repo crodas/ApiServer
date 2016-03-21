@@ -67,11 +67,10 @@ class ApiServer extends Pimple
                     throw new RuntimeException($object[0] . " is not a valid handler");
                 }
                 $function = $this->apps[$this->apiCall];
-                $argument = $object[1];
 
-                $this->runEvent('preRoute', $function, $argument);
-                $response = $function($argument, $this);
-                $this->runEvent('postRoute', $function, $argument);
+                $this->runEvent('preRoute', $function, $object[1]);
+                $response = $function->call(array(&$object[1], $this));
+                $this->runEvent('postRoute', $function, $object[1]);
 
                 $responses[] = $response;
             } catch (Exception $e) {
