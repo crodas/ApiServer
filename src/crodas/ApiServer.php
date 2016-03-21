@@ -103,6 +103,11 @@ class ApiServer extends Pimple
 
     public function main()
     {
+        $this->run();
+    }
+
+    public function run()
+    {
         if ($_SERVER["REQUEST_METHOD"] !== "POST") {
             $this->sendHeaders();
             echo self::WRONG_REQ_METHOD;
