@@ -46,7 +46,7 @@ function filter_prime_1(Array $requests, $server)
 /**
  *    @initRequest
  */
-function filter_prime_2(Array $requests, $server)
+function filter_prime_2(Array &$requests, $server)
 {
     foreach ($requests as &$request) {
         if ($request[0] === 'is_prime_2') {

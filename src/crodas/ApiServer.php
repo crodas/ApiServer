@@ -35,11 +35,6 @@ class ApiServer extends Pimple
 
     protected function runEvent($event, $function, &$argument)
     {
-        $ref = array();
-        foreach ($argument as $id => $arg) {
-            $ref[$id] = &$argument[$id];
-        }
-
         foreach ($this->events[$event] as $name => $annArgs) {
             if ($event === 'initRequest' && is_string($name) ) {
                 $args = array();
@@ -99,12 +94,12 @@ class ApiServer extends Pimple
             header("X-Session-Id: {$this['session']->getSessionId()}");
         }
 
-        $keys = array();
+        $keys = array('X-Session-Id', 'X-Destroy-Session-Id');
         foreach (headers_list() as $header) {
             list($key, ) = explode(":", $header);
             $keys[] = $key;
         }
-        header('Access-Control-Allow-Headers: ' . implode(",", $keys));
+        header('Access-Control-Allow-Headers: ' . implode(",", array_unique($keys)));
     }
 
     public function main()
