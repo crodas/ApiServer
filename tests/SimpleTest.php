@@ -31,6 +31,16 @@ class SessionStorage implements crodas\ApiServer\SessionStorage
         return $this;
     }
 
+    public function getAll()
+    {
+        return $this->data;
+    }
+
+    public function destroy()
+    {
+        $this->data = [];
+    }
+
     public function getSessionId()
     {
         self::$xdata[$this->id] = $this->data;
@@ -78,7 +88,7 @@ class SimpleTest extends \phpunit_framework_testcase
         $GLOBALS['encrypt'] = false;
         $server['session_storage'] = 'SessionStorage';
         $this->assertEquals([null], $server->processRequest([['session', ['remember' => 1]]]));
-        $_GET['sessionId'] = $server['session']->getSessionId();
+        $_SERVER['HTTP_X_SESSION_ID'] = $server['session']->getSessionId();
 
         $server = new crodas\ApiServer(__DIR__ . '/apps');
         $GLOBALS['encrypt'] = false;

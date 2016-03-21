@@ -29,7 +29,7 @@ class ApiServer extends Pimple
         );
         $this['session_storage'] = __NAMESPACE__ . '\ApiServer\SessionNative';
         $this['session'] = $this->share(function($service) {
-            return new $service['session_storage'](!empty($_GET['sessionId']) ? $_GET['sessionId'] :  null);
+            return new $service['session_storage'](!empty($_SERVER['HTTP_X_SESSION_ID']) ? $_SERVER['HTTP_X_SESSION_ID'] :  null);
         });
     }
 
@@ -95,7 +95,9 @@ class ApiServer extends Pimple
         header("Content-Type: application/json");
         header('Access-Control-Allow-Credentials: false');
         header('Access-Control-Allow-Methods: POST');
-        header("X-Session-Id: {$this['session']->getSessionId()}");
+        if ($this['session'] && $this['session']->getSessionId() !== $_SERVER['HTTP_X_SESSION_ID']) {
+            header("X-Session-Id: {$this['session']->getSessionId()}");
+        }
 
         $keys = array();
         foreach (headers_list() as $header) {

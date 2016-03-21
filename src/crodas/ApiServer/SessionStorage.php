@@ -11,6 +11,10 @@ interface SessionStorage
 
     public function get($name);
 
+    public function destroy();
+
+    public function getAll();
+
     public function getSessionId();
 
 }

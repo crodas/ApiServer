@@ -23,6 +23,17 @@ class SessionNative implements SessionStorage
         $_SESSION[$name] = $value;
         return $this;
     }
+    
+    public function destroy()
+    {
+        session_destroy();
+        $this->sessionId = null;
+    }
+
+    public function getAll()
+    {
+        return $_SESSION;
+    }
 
     public function get($name)
     {
