@@ -6,6 +6,7 @@ use FunctionDiscovery;
 use RuntimeException;
 use Exception;
 use Pimple;
+use FunctionDiscovery\TFunction;
 
 class ApiServer extends Pimple
 {
@@ -33,44 +34,61 @@ class ApiServer extends Pimple
         });
     }
 
-    protected function runEvent($event, $function, &$argument)
+    /**
+     *  Run a given event
+     *  
+     *  @param string       $event      Event name to run
+     *  @param mixed        &$argument  Arguments  
+     *  @param TFunction    $function   Function wrapper (FunctionDiscovery\TFunction)
+     *
+     *  @return null
+     */
+    protected function runEvent($event, &$argument, TFunction $function = null)
     {
-        foreach ($this->events[$event] as $name => $annArgs) {
+        foreach ($this->events[$event] as $name => $aArguments) {
             if ($event === 'initRequest' && is_string($name) ) {
-                $args = array();
+                $arguments = array();
                 foreach ($argument as $id => $arg) {
                     if ($arg[0] === $name) {
-                        $args[] = &$argument[$id][1];
+                        $arguments[] = &$argument[$id][1];
                     }
                 }
-                if (empty($args)) {
+                if (empty($arguments)) {
                     continue;
                 }
-                $annArgs($args, $this, $function ? $function->getAnnotation($name) : null);
+                $aArguments($arguments, $this, $function ? $function->getAnnotation($name) : null);
                 continue;
             }
             if (!$function || (is_numeric($name) || $function->hasAnnotation($name))) {
-                $annArgs->call(array(&$argument, $this, $function ? $function->getAnnotation($name) : null));
+                $aArguments->call(array(&$argument, $this, $function ? $function->getAnnotation($name) : null));
             }
         }
     }
 
-    public function processRequest(Array $request)
+    /**
+     *  processRequest
+     *  
+     *  @param  Array $requests     Array with all the requests
+     *
+     *  @return Array return all the responses
+     */
+    public function processRequest(Array $requests)
     {
-        $this->runEvent('initRequest', NULL, $request);
+        $this->runEvent('initRequest', $requests);
 
         $responses = array();
-        foreach ($request as $object) {
+        foreach ($requests as $request) {
             try {
-                $this->apiCall = $object[0];
-                if (empty($this->apps[$this->apiCall])) {
-                    throw new RuntimeException($object[0] . " is not a valid handler");
-                }
-                $function = $this->apps[$this->apiCall];
+                $this['request'] = ['function' => $request[0], 'arguments' => &$request[1]];
 
-                $this->runEvent('preRoute', $function, $object[1]);
-                $response = $function->call(array(&$object[1], $this));
-                $this->runEvent('postRoute', $function, $object[1]);
+                if (empty($this->apps[$request[0]])) {
+                    throw new RuntimeException($request[0] . " is not a valid handler");
+                }
+                $function = $this->apps[$request[0]];
+
+                $this->runEvent('preRoute', $request[1], $function);
+                $response = $function->call(array(&$request[1], $this));
+                $this->runEvent('postRoute', $request[1], $function);
 
                 $responses[] = $response;
             } catch (Exception $e) {
@@ -78,11 +96,14 @@ class ApiServer extends Pimple
             }
         }
 
-        $this->runEvent('preResponse', NULL, $responses);
+        $this->runEvent('preResponse', $responses);
 
         return $responses;
     }
 
+    /**
+     *  Send all the HTTP response headers
+     */
     protected function sendHeaders()
     {
         header("Access-Control-Allow-Origin: *");
