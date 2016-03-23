@@ -67,7 +67,7 @@ class SimpleTest extends \phpunit_framework_testcase
     {
         $server = new crodas\ApiServer(__DIR__ . '/apps');
         $server['session_storage'] = 'SessionStorage';
-        $this->assertEquals($response, $server->processRequest($request));
+        $this->assertEquals($response, $server->handle($request)->getBody());
     }
 
     /**
@@ -79,25 +79,56 @@ class SimpleTest extends \phpunit_framework_testcase
         $server['session_storage'] = 'SessionStorage';
         $GLOBALS['encrypt'] = true;
         do_encrypt($response);
-        $this->assertEquals($response, $server->processRequest($request));
+        $this->assertEquals($response, $server->handle($request)->getBody());
+    }
+
+    protected function hasSessionHeader(Array $headers)
+    {
+        foreach ($headers as $header) {
+            if (preg_match("/X-Session-Id/", $header)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function testSession()
     {
-        $server = new crodas\ApiServer(__DIR__ . '/apps');
         $GLOBALS['encrypt'] = false;
+
+        $server = new crodas\ApiServer(__DIR__ . '/apps');
         $server['session_storage'] = 'SessionStorage';
-        $this->assertEquals([null], $server->processRequest([['session', ['remember' => 1]]]));
+        $response = $server->handle([['session', ['remember' => 1]]]);
+        $this->assertEquals([null], $response->getBody());
+        $this->assertTrue($this->hasSessionHeader($response->getHeaders()));
         $_SERVER['HTTP_X_SESSION_ID'] = $server['session']->getSessionId();
 
         $server = new crodas\ApiServer(__DIR__ . '/apps');
-        $GLOBALS['encrypt'] = false;
         $server['session_storage'] = 'SessionStorage';
-        $this->assertEquals([1], $server->processRequest([['session', ['remember' => 2]]]));
+        $response = $server->handle([['session', ['remember' => 2]]]);
+        $this->assertEquals([1], $response->getBody());
+        $this->assertFalse($this->hasSessionHeader($response->getHeaders()));
 
         $server = new crodas\ApiServer(__DIR__ . '/apps');
-        $GLOBALS['encrypt'] = false;
         $server['session_storage'] = 'SessionStorage';
-        $this->assertEquals([1], $server->processRequest([['session', ['remember' => 3]]]));
+        $response = $server->handle([['session', ['remember' => 3]]]);
+        $this->assertEquals([2], $response->getBody());
+        $this->assertFalse($this->hasSessionHeader($response->getHeaders()));
+    }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testRunDifferentMethod()
+    {
+        $server = new crodas\ApiServer(__DIR__ . '/apps');
+        ob_start();
+        $server->run([]);
+        $this->assertEquals(crodas\ApiServer::WRONG_REQ_METHOD, ob_get_clean());
+        foreach (headers_list() as $header) {
+            var_dump($header);exit;
+        }
     }
 }

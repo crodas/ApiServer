@@ -3,7 +3,7 @@
 require __DIR__ . '/../vendor/autoload.php';
 
 rrmdir(__DIR__ . '/tmp');
-mkdir(__DIR__ . '/tmp');
+@mkdir(__DIR__ . '/tmp');
 
 function rrmdir($dir)
 { 
