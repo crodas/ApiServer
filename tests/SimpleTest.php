@@ -99,6 +99,13 @@ class SimpleTest extends \phpunit_framework_testcase
 
         $server = new crodas\ApiServer(__DIR__ . '/apps');
         $server['session_storage'] = 'SessionStorage';
+        $response = $server->handle([['xxx', []]]);
+        $this->assertEquals([['foo' => 'bar']], $response->getBody());
+        $this->assertFalse($this->hasSessionHeader($response->getHeaders()));
+
+
+        $server = new crodas\ApiServer(__DIR__ . '/apps');
+        $server['session_storage'] = 'SessionStorage';
         $response = $server->handle([['session', ['remember' => 1]]]);
         $this->assertEquals([null], $response->getBody());
         $this->assertTrue($this->hasSessionHeader($response->getHeaders()));
@@ -114,7 +121,6 @@ class SimpleTest extends \phpunit_framework_testcase
         $server['session_storage'] = 'SessionStorage';
         $response = $server->handle([['session', ['remember' => 3]]]);
         $this->assertEquals([2], $response->getBody());
-        $this->assertFalse($this->hasSessionHeader($response->getHeaders()));
     }
 
     /**
