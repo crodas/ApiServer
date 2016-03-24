@@ -105,7 +105,8 @@ class ApiServer extends Pimple
                     $this['request'] = ['function' => $request[0], 'arguments' => &$request[1]];
 
                     if (empty($this->apps[$request[0]])) {
-                        throw new RuntimeException($request[0] . " is not a valid handler");
+                        $responses[] = array('error' => true, 'text' => $request[0] . " is not a valid handler");
+                        continue;
                     }
                     $function = $this->apps[$request[0]];
 
@@ -118,7 +119,6 @@ class ApiServer extends Pimple
                     $responses[] = array('error' => true, 'text' => $e->getMessage());
                 }
             }
-
         } catch (Exception  $e) {
             $responses = self::INTERNAL_ERROR;
         }
