@@ -10,6 +10,11 @@ function do_encrypt(&$response)
     }
 }
 
+/** @API do_fail */
+function do_fail()
+{
+}
+
 /**
  *  @preRoute yyy
  *  @xxx

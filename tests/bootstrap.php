@@ -1,6 +1,7 @@
 <?php
 
 require __DIR__ . '/../vendor/autoload.php';
+require __DIR__ . '/SessionStorage.php';
 
 rrmdir(__DIR__ . '/tmp');
 @mkdir(__DIR__ . '/tmp');

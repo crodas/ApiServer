@@ -20,6 +20,14 @@ function is_prime($x) {
 }
 
 /**
+ *  @initRequest do_fail
+ */
+function do_fail_initreq()
+{
+    throw new Exception;
+}
+
+/**
  *    @initRequest is_prime3
  */
 function filter_prime_x(Array $requests, $server)

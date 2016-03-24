@@ -70,7 +70,19 @@ class ApiServer extends Pimple
     }
 
     /**
-     *  handle
+     *  Prepare the response and send it back to the client.
+     *
+     *  @param mixed $responses Response for the client
+     *  @return {Response}
+     */
+    protected function send($responses)
+    {
+        $this->runEvent('preResponse', $responses);
+        return new Response($this, $responses);
+    }
+
+    /**
+     *  Handle the request
      *  
      *  @param  Array $requests     Array with all the requests
      *
@@ -81,7 +93,7 @@ class ApiServer extends Pimple
         $requests = $requests ?: json_decode(file_get_contents('php://input'), true);
 
         if (empty($requests)) {
-            return new Response($this, self::WRONG_REQ_METHOD);
+            return $this->send(self::WRONG_REQ_METHOD);
         }
 
         try {
@@ -107,12 +119,11 @@ class ApiServer extends Pimple
                 }
             }
 
-            $this->runEvent('preResponse', $responses);
         } catch (Exception  $e) {
             $responses = self::INTERNAL_ERROR;
         }
 
-        return new Response($this, $responses);
+        return $this->send($responses);
     }
 
     public function run(Array $requests = array())
