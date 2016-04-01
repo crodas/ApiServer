@@ -2,14 +2,13 @@
 
 namespace crodas\ApiServer;
 
-
 class SessionNative implements SessionStorage
 {
     public function __construct($id)
     {
-        ini_set("session.use_cookies", 0);
-        ini_set("session.use_only_cookies", 0);
-        ini_set("session.cache_limiter", "");
+        ini_set('session.use_cookies', 0);
+        ini_set('session.use_only_cookies', 0);
+        ini_set('session.cache_limiter', '');
 
         if ($id) {
             session_id($id);
@@ -21,9 +20,10 @@ class SessionNative implements SessionStorage
     public function set($name, $value)
     {
         $_SESSION[$name] = $value;
+
         return $this;
     }
-    
+
     public function destroy()
     {
         session_destroy();
@@ -38,8 +38,9 @@ class SessionNative implements SessionStorage
     public function get($name)
     {
         if (!array_key_exists($name, $_SESSION)) {
-            return null;
+            return;
         }
+
         return $_SESSION[$name];
     }
 

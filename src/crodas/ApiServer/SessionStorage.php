@@ -2,7 +2,6 @@
 
 namespace crodas\ApiServer;
 
-
 interface SessionStorage
 {
     public function __construct($id);
@@ -16,5 +15,4 @@ interface SessionStorage
     public function getAll();
 
     public function getSessionId();
-
 }

@@ -3,13 +3,14 @@
 /**
  *  @preRoute xxx
  */
-function filter_xx(Array $args)
+function filter_xx(array $args)
 {
-    throw new RuntimeException("Failed exception");
+    throw new RuntimeException('Failed exception');
 }
 
-function is_prime($x) {
-    $middle = ceil($x/2);
+function is_prime($x)
+{
+    $middle = ceil($x / 2);
     for ($i = 2; $i <= $middle; ++$i) {
         if ($x % $i === 0) {
             return false;
@@ -22,7 +23,7 @@ function is_prime($x) {
 /**
  *    @initRequest is_prime3
  */
-function filter_prime_x(Array $requests, $server)
+function filter_prime_x(array $requests, $server)
 {
     foreach ($requests as &$request) {
         $request['result'] = is_prime($request['q']);
@@ -32,9 +33,9 @@ function filter_prime_x(Array $requests, $server)
 /**
  *    @initRequest
  */
-function filter_prime_1(Array $requests, $server)
+function filter_prime_1(array $requests, $server)
 {
-    $is_prime = array();
+    $is_prime = [];
     foreach ($requests as $request) {
         if ($request[0] === 'is_prime') {
             $is_prime[$request[1]['q']] = is_prime($request[1]['q']);
@@ -46,7 +47,7 @@ function filter_prime_1(Array $requests, $server)
 /**
  *    @initRequest
  */
-function filter_prime_2(Array &$requests, $server)
+function filter_prime_2(array &$requests, $server)
 {
     foreach ($requests as &$request) {
         if ($request[0] === 'is_prime_2') {
