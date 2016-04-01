@@ -21,7 +21,7 @@ function do_it()
 /**
  *  @preRoute
  */
-function all_request(Array & $args)
+function all_request(array &$args)
 {
     $args['added'] = 1;
 }

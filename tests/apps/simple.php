@@ -3,10 +3,11 @@
 /**
  *  @API xxx
  */
-function apps(Array $args, $session)
+function apps(array $args, $session)
 {
     if (empty($args['added'])) {
-        throw new RuntimeException;
+        throw new RuntimeException();
     }
-    return array('foo' => 'bar');
+
+    return ['foo' => 'bar'];
 }

@@ -3,9 +3,10 @@
 /**
  *  @API session
  */
-function session(Array $args, $server)
+function session(array $args, $server)
 {
     $ret = $server['session']->get('remember');
     $server['session']->set('remember', $args['remember']);
+
     return $ret;
 }
