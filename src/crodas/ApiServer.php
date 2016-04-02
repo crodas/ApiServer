@@ -29,7 +29,7 @@ class ApiServer extends Pimple
             'postRoute'     => $loader->getFunctions('postRoute'),
             'preResponse'   => $loader->getFunctions('preResponse'),
         );
-        $this['session_storage'] = __NAMESPACE__ . '\ApiServer\SessionNative';
+        $this['session_storage'] = __NAMESPACE__ . '\ApiServer\Session\Native';
         $this['session_id'] = $this->share(function() {
             return !empty($_SERVER['HTTP_X_SESSION_ID']) ? $_SERVER['HTTP_X_SESSION_ID'] :  null;
         });

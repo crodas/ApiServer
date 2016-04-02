@@ -1,6 +1,6 @@
 <?php
 
-class SessionStorage implements crodas\ApiServer\SessionStorage
+class SessionStorage implements crodas\ApiServer\Session\Storage
 {
     static $xdata = array();
     public function __construct($id)

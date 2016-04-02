@@ -1,9 +1,9 @@
 <?php
 
-namespace crodas\ApiServer;
+namespace crodas\ApiServer\Session;
 
 
-interface SessionStorage
+interface Storage
 {
     public function __construct($id);
 
