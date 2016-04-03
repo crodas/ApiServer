@@ -1,7 +1,7 @@
 <?php
 
 /**
- *    @API is_prime
+ *    @API("is_prime")
  *
  *    The "bulk" calculation is done in a @initRequest, in this tests
  *    it makes no difference but it coves the following scenarios:
@@ -17,8 +17,8 @@ function is_prime_service(Array $args, $server)
 }
 
 /**
- *  @API is_prime_2
- *  @API is_prime3
+ *  @API("is_prime_2")
+ *  @API("is_prime3")
  *
  *  Same as is_prime but the data exchange between @initRequest
  *  and the service is done throught the args
